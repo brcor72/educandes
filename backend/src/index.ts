@@ -11,16 +11,23 @@ import profileRoutes from './routes/profile';
 const app = express();
 const PORT = process.env.PORT ?? 3001;
 
-// En producción, CORS_ORIGIN puede ser una lista separada por comas
-// p.ej. "https://educandes.vercel.app,https://educandes-staging.vercel.app"
-const corsOrigins: string | string[] | boolean =
-  process.env.NODE_ENV === 'production'
-    ? process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
-      : true          // true = refleja el origin, acepta cualquiera (útil al desplegar)
-    : ['http://localhost:5173', 'http://localhost:3000'];
+// CORS: permite cualquier origen en producción (usamos JWT, no cookies)
+// Para restringir: definir CORS_ORIGIN="https://educandes.vercel.app" en las env vars
+const allowedOrigins =
+  process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : null;
 
-app.use(cors({ origin: corsOrigins }));
+app.use(
+  cors({
+    origin: allowedOrigins ?? '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 204,
+  }),
+);
+// Responder preflight OPTIONS en todas las rutas
+app.options('*', cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
