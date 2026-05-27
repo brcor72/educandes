@@ -12,7 +12,7 @@ services:
     rootDir: backend
 
     buildCommand: >
-      npm install &&
+      npm install --include=dev &&
       npx prisma generate --schema prisma/schema.prod.prisma &&
       npm run build &&
       npx prisma db push --schema prisma/schema.prod.prisma &&
