@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  dni          String   @unique
+  name         String
+  password     String
+  language     String   @default("es")
+  community    String?
+  phone        String?
+  role         String   @default("student")
+  tutorialDone Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  forumPosts   ForumPost[]
+  progress     UserProgress[]
+  replies      ForumReply[]
+}
+
+model Course {
+  id            Int    @id @default(autoincrement())
+  slug          String @unique
+  title         String
+  description   String
+  category      String
+  difficulty    String @default("inicial")
+  durationWeeks Int
+  imageUrl      String?
+  order         Int    @default(0)
+
+  lessons    Lesson[]
+  forumPosts ForumPost[]
+  progress   UserProgress[]
+}
+
+model Lesson {
+  id          Int     @id @default(autoincrement())
+  courseId    Int
+  order       Int
+  title       String
+  description String?
+  content     String?
+  isPractical Boolean @default(false)
+
+  course   Course         @relation(fields: [courseId], references: [id])
+  progress UserProgress[]
+}
+
+model UserProgress {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  courseId    Int
+  lessonId    Int
+  completedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+}
+
+model ForumPost {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  courseId  Int
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+
+  user    User         @relation(fields: [userId], references: [id])
+  course  Course       @relation(fields: [courseId], references: [id])
+  replies ForumReply[]
+}
+
+model ForumReply {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  body      String
+  createdAt DateTime @default(now())
+
+  post ForumPost @relation(fields: [postId], references: [id])
+  user User      @relation(fields: [userId], references: [id])
+}
